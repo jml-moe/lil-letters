@@ -1,0 +1,11 @@
+{
+  "title": "test-puzzle",
+  "description": "Engage your crush with a playful, interactive puzzle that reveals heartfelt quotes, creating a sweet and memorable experience.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

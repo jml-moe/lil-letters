@@ -1,0 +1,475 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap');
+@import 'tailwindcss';
+@import '@cloudflare/kumo/styles/tailwind';
+
+:root {
+  --ink: #16161a;
+  --muted: #8b8b95;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+html,
+body {
+  background: #ffffff;
+}
+
+body {
+  font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono {
+  font-family: 'DM Mono', ui-monospace, monospace;
+}
+
+/* Scrollbars stay out of the way until the page is actually scrolling. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+html.is-scrolling ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.16);
+}
+
+/* Pieces travel across the board, so ease-in-out; only transform + filter move. */
+.piece {
+  position: absolute;
+  cursor: default;
+  transform: var(--rest);
+  transition:
+    transform 520ms var(--ease-drawer),
+    filter 200ms ease;
+}
+
+.piece.is-loose {
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .piece.is-loose:hover {
+    transform: var(--rest) translateY(-3px);
+  }
+}
+
+.piece.is-active .piece-glow {
+  animation: glow 2.2s ease-in-out infinite;
+}
+
+.piece-glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+.piece.is-shaking {
+  animation: shake 260ms var(--ease-out);
+}
+
+@keyframes shake {
+  20% {
+    transform: var(--rest) translateX(-5px);
+  }
+  60% {
+    transform: var(--rest) translateX(5px);
+  }
+  100% {
+    transform: var(--rest) translateX(0);
+  }
+}
+
+/* Entrance: never from scale(0) — a hair under full size, ease-out. */
+.quote-body {
+  opacity: 0;
+  transform: translateY(8px) scale(0.97);
+  transition:
+    opacity 240ms var(--ease-out) 300ms,
+    transform 260ms var(--ease-out) 300ms;
+}
+
+.quote-body.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.ghost-layer {
+  transition: opacity 280ms var(--ease-out);
+}
+
+.replay {
+  transition:
+    opacity 220ms var(--ease-out),
+    transform 220ms var(--ease-out),
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .piece,
+  .quote-body,
+  .ghost-layer,
+  .replay {
+    transition-duration: 120ms;
+  }
+  .piece.is-shaking {
+    animation: none;
+  }
+  .piece.is-active .piece-glow {
+    animation: none;
+    opacity: 0.8;
+  }
+}
+
+/* ── Page tabs ──────────────────────────────────────────────────────────── */
+
+/* Always DM Sans, even on the letters page where everything else is Courier. */
+.page-tabs,
+.page-tabs button {
+  font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Kumo paints a recessed track behind the list; our own track replaces it. */
+.page-tabs > div > div:first-child {
+  display: none;
+}
+
+/* Kumo's overflow scroll-fade controls: the bar never overflows, so drop them. */
+.page-tabs > div > button {
+  display: none;
+}
+
+/* ── Letters page ───────────────────────────────────────────────────────── */
+
+.letters {
+  font-family: 'Courier Prime', ui-monospace, monospace;
+  color: #16161a;
+}
+
+.letters .elite {
+  font-family: 'Special Elite', 'Courier Prime', monospace;
+}
+
+/* Woven gingham: two translucent stripe grids crossing to give three tones. */
+.gingham {
+  background-color: #ffffff;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(22, 22, 30, 0.05) 0 46px,
+      transparent 46px 92px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(22, 22, 30, 0.05) 0 46px,
+      transparent 46px 92px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(22, 22, 30, 0.025) 0 4px,
+      transparent 4px 8px
+    );
+}
+
+.paper-roll {
+  width: min(448px, 84vw);
+}
+
+.paper-page {
+  overflow: hidden;
+  padding: clamp(20px, 4vw, 38px) clamp(18px, 4vw, 37px) clamp(26px, 4.8vw, 45px);
+  background: #f8f6f0;
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.012) 0 2px,
+    transparent 2px 5px
+  );
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.06),
+    0 18px 40px rgba(24, 24, 30, 0.09);
+}
+
+.dashed-rule {
+  border: 0;
+  border-top: 2px dashed #16161a;
+  opacity: 0.65;
+}
+
+/* ── Typewriter ─────────────────────────────────────────────────────────── */
+
+.tw {
+  position: relative;
+  width: min(704px, 92vw);
+  margin: 0 auto;
+  --key: clamp(21px, 3.7vw, 37px);
+}
+
+/* Platen assembly: rod, rollers, knurled wheels and the return lever. */
+.tw-carriage {
+  position: relative;
+  height: calc(var(--key) * 1.05);
+}
+
+.tw-rod {
+  position: absolute;
+  left: calc(var(--key) * 0.1);
+  right: calc(var(--key) * 0.1);
+  top: calc(var(--key) * 0.24);
+  height: calc(var(--key) * 0.3);
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    #fdfdfe 0%,
+    #d3d3da 38%,
+    #8d8d97 72%,
+    #f0f0f3 100%
+  );
+  box-shadow: 0 2px 4px rgba(20, 20, 26, 0.28);
+}
+
+.tw-roller {
+  position: absolute;
+  top: calc(var(--key) * 0.05);
+  width: calc(var(--key) * 0.68);
+  height: calc(var(--key) * 0.68);
+  border-radius: 999px;
+  background: radial-gradient(circle at 34% 28%, #3d3d45, #131317 72%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.tw-wheel {
+  position: absolute;
+  bottom: calc(var(--key) * -0.42);
+  width: calc(var(--key) * 1.6);
+  height: calc(var(--key) * 1.6);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 50%, #1a1a1e 0 16%, transparent 17%),
+    repeating-conic-gradient(#0d0d10 0 5deg, #43434c 5deg 10deg);
+  box-shadow: 0 4px 10px rgba(16, 16, 22, 0.45);
+}
+
+.tw-wheel-left {
+  left: calc(var(--key) * 0.6);
+}
+.tw-wheel-right {
+  right: calc(var(--key) * 0.6);
+}
+
+/* The white ball knob riding on the wheel. */
+.tw-ball {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--key) * 0.1);
+  width: calc(var(--key) * 0.46);
+  height: calc(var(--key) * 0.46);
+  margin-left: calc(var(--key) * -0.23);
+  border-radius: 999px;
+  background: radial-gradient(circle at 34% 28%, #ffffff, #b9b9c2 78%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.tw-lever {
+  position: absolute;
+  left: calc(var(--key) * -0.1);
+  top: calc(var(--key) * 0.2);
+  width: calc(var(--key) * 2.6);
+  height: calc(var(--key) * 3.2);
+  transform-origin: 100% 0;
+  margin-left: -27px;
+  margin-right: -27px;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  transition: transform 240ms var(--ease-out);
+}
+
+.tw-lever.is-pulled {
+  transform: rotate(-24deg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tw-lever:hover {
+    transform: rotate(-6deg);
+  }
+  .tw-lever.is-pulled:hover {
+    transform: rotate(-24deg);
+  }
+}
+
+/* Arm: a chrome tube bending down and to the left, ending in a flat grip. */
+.tw-lever-arm {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 72%;
+  border-left: calc(var(--key) * 0.2) solid transparent;
+  border-top: calc(var(--key) * 0.2) solid transparent;
+  border-radius: 60% 0 0 0;
+  background:
+    linear-gradient(180deg, #fbfbfd, #c6c6ce 45%, #85858f) border-box;
+  -webkit-mask:
+    radial-gradient(
+        farthest-side at 100% 100%,
+        transparent calc(100% - var(--key) * 0.22),
+        #000 calc(100% - var(--key) * 0.22)
+      )
+      no-repeat;
+  mask: radial-gradient(
+      farthest-side at 100% 100%,
+      transparent calc(100% - var(--key) * 0.22),
+      #000 calc(100% - var(--key) * 0.22)
+    )
+    no-repeat;
+  filter: drop-shadow(0 2px 3px rgba(20, 20, 26, 0.3));
+}
+
+.tw-lever-grip {
+  position: absolute;
+  left: 0;
+  top: 62%;
+  width: calc(var(--key) * 0.34);
+  height: calc(var(--key) * 1.15);
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f4f4f6, #b6b6bf 55%, #7d7d87);
+  box-shadow: 0 3px 6px rgba(20, 20, 26, 0.32);
+}
+
+/* Body: perforated steel plate, rounded on every corner. */
+.tw-body {
+  position: relative;
+  z-index: 1;
+  margin: 0 calc(var(--key) * 0.35);
+  padding: calc(var(--key) * 0.7) clamp(16px, 4vw, 46px) calc(var(--key) * 0.55);
+  border-radius: calc(var(--key) * 0.5);
+  background-color: #131316;
+  background-image:
+    radial-gradient(
+      circle at center,
+      rgba(255, 255, 255, 0.055) 1px,
+      transparent 1.15px
+    ),
+    radial-gradient(
+      120% 90% at 50% -10%,
+      rgba(255, 255, 255, 0.07),
+      transparent 60%
+    );
+  background-size:
+    6px 6px,
+    100% 100%;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 -10px 34px rgba(16, 16, 22, 0.3);
+}
+
+.tw-row {
+  display: flex;
+  justify-content: center;
+  gap: calc(var(--key) * 0.28);
+  margin-bottom: calc(var(--key) * 0.62);
+}
+
+.tw-slot {
+  position: relative;
+  display: block;
+  width: var(--key);
+  height: var(--key);
+}
+
+/* The dark well each key sits in, peeking out above the keycap. */
+.tw-well {
+  position: absolute;
+  left: 0;
+  top: calc(var(--key) * -0.42);
+  width: var(--key);
+  height: var(--key);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.tw-key {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  font-family: 'Courier Prime', ui-monospace, monospace;
+  font-size: calc(var(--key) * 0.36);
+  color: #f6f6f8;
+  background:
+    radial-gradient(circle at 50% 42%, #1b1b20 0 62%, transparent 63%),
+    conic-gradient(
+      from 210deg,
+      #f2f2f5,
+      #8d8d97 22%,
+      #d8d8de 40%,
+      #6f6f79 60%,
+      #eeeef1 78%,
+      #9a9aa4 100%
+    );
+  box-shadow:
+    0 3px 5px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition:
+    transform 120ms var(--ease-out),
+    box-shadow 120ms var(--ease-out);
+}
+
+.tw-key.is-down {
+  transform: translateY(2px);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.tw-space {
+  width: 62%;
+  height: calc(var(--key) * 0.62);
+  margin: calc(var(--key) * 0.2) auto 0;
+  border-radius: calc(var(--key) * 0.16);
+  background: linear-gradient(180deg, #303037, #16161a);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+.tw-hint {
+  position: absolute;
+  left: calc(var(--key) * 2.7);
+  top: calc(var(--key) * 2.2);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #8a8a92;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tw-key,
+  .tw-lever {
+    transition: none;
+  }
+  .paper-roll {
+    transition-duration: 120ms !important;
+  }
+}
