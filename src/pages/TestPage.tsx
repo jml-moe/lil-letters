@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import paperBallUrl from '../imports/paper-ball.svg'
 import paperCrumpleUrl from '../imports/paper-crumple.mp3'
 
@@ -25,9 +25,8 @@ function PlusIcon() {
 
 interface Note {
   id: number
-  title: string
   body: string
-  date: string
+  label: string
 }
 
 interface BinBall {
@@ -52,57 +51,12 @@ const BIN_H = 246 // ~2:3 aspect (200:300 viewBox)
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-const SEED_NOTES: Note[] = [
-  {
-    id: 1,
-    title: 'Cancel the free trial',
-    body: 'Before they charge the card on the 15th.',
-    date: 'Mon',
-  },
-  {
-    id: 2,
-    title: 'Buy groceries',
-    body: 'Milk, eggs, bread, butter, and fresh coffee beans from the market on Main St.',
-    date: 'Tue',
-  },
-  {
-    id: 3,
-    title: 'Call the dentist',
-    body: 'Schedule a cleaning appointment for next week.',
-    date: 'Wed',
-  },
-  {
-    id: 4,
-    title: 'Fix the Safari login bug',
-    body: "The login flow breaks on Safari when third-party cookies are disabled. Need to test the fallback auth strategy before Friday's release. Also check if session tokens persist correctly across redirects.",
-    date: 'Thu',
-  },
-  {
-    id: 5,
-    title: 'Finish chapter 4',
-    body: 'Read the last three sections before book club meets Friday evening at 7pm.',
-    date: 'Fri',
-  },
-  {
-    id: 6,
-    title: 'Update resume',
-    body: "Add the open-source projects and refresh the skills section. Don't forget the recent contributions.",
-    date: 'Sat',
-  },
-]
-
-let _nextId = 100
-const NOTE_TEMPLATES: Omit<Note, 'id'>[] = [
-  { title: 'Water the plants', body: 'They look droopy. Snake plant needs water too.', date: 'Today' },
-  { title: 'Review PR #42', body: 'Check edge cases in the auth middleware before merging to main.', date: 'Today' },
-  { title: 'Ping Alex', body: 'Meeting rescheduled to Monday at 2pm.', date: 'Today' },
-  { title: 'Order the birthday cake', body: 'Pick it up from the bakery on 5th Ave. Call ahead by Thursday.', date: 'Today' },
-]
+let _nextId = 1
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getBallSizes(note: Note): { svgSize: number; flyingSize: number } {
-  const len = note.title.length + note.body.length
+  const len = note.body.length
   // svgSize: diameter in the SVG viewBox (0 0 200 300) coordinate space
   const svgSize = len < 70 ? 32 : len < 160 ? 44 : len < 280 ? 56 : 68
   // flyingSize: CSS px when airborne — noticeably larger for readability
@@ -119,6 +73,21 @@ function ballSvgPos(index: number, svgSize: number, offsetX: number): { x: numbe
   // Cavity bottom at y≈222 in the 0-300 viewBox
   const cy = 218 - row * svgSize * 0.74
   return { x: cx - svgSize / 2, y: cy - svgSize / 2 }
+}
+
+function makeNoteLabel() {
+  return new Intl.DateTimeFormat('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date())
+}
+
+function createBlankNote(): Note {
+  return {
+    id: _nextId++,
+    body: '',
+    label: makeNoteLabel(),
+  }
 }
 
 // ─── Basket SVG (inline so balls render between back and front layers) ─────────
@@ -225,7 +194,7 @@ function BasketSvg({ balls }: { balls: BinBall[] }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TestPage() {
-  const [notes, setNotes] = useState<Note[]>(SEED_NOTES)
+  const [notes, setNotes] = useState<Note[]>([createBlankNote()])
   const [crumpling, setCrumpling] = useState<Set<number>>(new Set())
   const [flyingBalls, setFlyingBalls] = useState<FlyingBall[]>([])
   const [binBalls, setBinBalls] = useState<BinBall[]>([])
@@ -233,8 +202,29 @@ export default function TestPage() {
 
   const cardRefs = useRef<Map<number, HTMLElement>>(new Map())
   const wrapperRefs = useRef<Map<number, HTMLElement>>(new Map())
+  const bodyRefs = useRef<Map<number, HTMLTextAreaElement>>(new Map())
   const inactivityTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const pendingFocusNoteId = useRef<number | null>(null)
+
+  const resizeTextarea = useCallback((noteId: number) => {
+    const textarea = bodyRefs.current.get(noteId)
+    if (!textarea) return
+    textarea.style.height = '0px'
+    textarea.style.height = `${textarea.scrollHeight}px`
+  }, [])
+
+  useEffect(() => {
+    if (pendingFocusNoteId.current === null) return
+    const textarea = bodyRefs.current.get(pendingFocusNoteId.current)
+    if (!textarea) return
+    textarea.focus()
+    pendingFocusNoteId.current = null
+  }, [notes])
+
+  useEffect(() => {
+    notes.forEach((note) => resizeTextarea(note.id))
+  }, [notes, resizeTextarea])
 
   const playSound = useCallback(() => {
     try {
@@ -321,8 +311,13 @@ export default function TestPage() {
   )
 
   const addNote = useCallback(() => {
-    const t = NOTE_TEMPLATES[_nextId % NOTE_TEMPLATES.length]
-    setNotes((prev) => [...prev, { id: _nextId++, ...t }])
+    const next = createBlankNote()
+    pendingFocusNoteId.current = next.id
+    setNotes((prev) => [next, ...prev])
+  }, [])
+
+  const updateNote = useCallback((noteId: number, patch: Partial<Note>) => {
+    setNotes((prev) => prev.map((note) => (note.id === noteId ? { ...note, ...patch } : note)))
   }, [])
 
   return (
@@ -333,7 +328,7 @@ export default function TestPage() {
         paddingTop: '76px',
         paddingBottom: '320px',
         overflowX: 'hidden',
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+        fontFamily: "'Patrick Hand', 'Bradley Hand', 'Segoe Print', cursive",
       }}
     >
       {/* ── Keyframes ── */}
@@ -373,7 +368,15 @@ export default function TestPage() {
           justifyContent: 'space-between',
         }}
       >
-        <span style={{ color: '#f0ede8', fontSize: 17, fontWeight: 600, letterSpacing: '-0.015em' }}>
+        <span
+          style={{
+            color: '#f0ede8',
+            fontSize: 17,
+            fontWeight: 600,
+            letterSpacing: '-0.015em',
+            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+          }}
+        >
           Notes
         </span>
         <button
@@ -389,7 +392,7 @@ export default function TestPage() {
             color: 'rgba(255,255,255,0.5)',
             fontSize: 13,
             cursor: 'pointer',
-            fontFamily: 'inherit',
+            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
           }}
         >
           <PlusIcon />
@@ -408,7 +411,7 @@ export default function TestPage() {
               paddingTop: 64,
             }}
           >
-            All notes thrown away.
+            No paper yet. Tap Add and write whatever is on your mind.
           </p>
         ) : (
           notes.map((note) => (
@@ -431,20 +434,59 @@ export default function TestPage() {
                 style={{
                   background: '#ffffff',
                   borderRadius: 14,
-                  padding: '15px 15px 13px',
+                  padding: '12px 13px 11px',
                   boxShadow: '0 2px 10px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(0,0,0,0.1)',
+                  display: 'flex',
+                  flexDirection: 'column',
                 }}
               >
-                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <p style={{ margin: 0, flex: 1, fontSize: 15, fontWeight: 700, color: '#111', lineHeight: 1.35 }}>
-                    {note.title}
-                  </p>
+                <textarea
+                  ref={(el) => {
+                    if (el) bodyRefs.current.set(note.id, el)
+                    else bodyRefs.current.delete(note.id)
+                  }}
+                  value={note.body}
+                  onChange={(event) => {
+                    updateNote(note.id, { body: event.target.value })
+                    resizeTextarea(note.id)
+                  }}
+                  placeholder="Tulis keluhanmu hari ini, uneg-uneg, atau apa pun yang ingin kamu buang."
+                  rows={1}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    height: 0,
+                    minHeight: 22,
+                    resize: 'none',
+                    overflow: 'hidden',
+                    margin: '4px 0 0',
+                    border: 'none',
+                    outline: 'none',
+                    background: 'transparent',
+                    padding: 0,
+                    fontSize: 15,
+                    color: '#666',
+                    lineHeight: 1.55,
+                    fontFamily: 'inherit',
+                  }}
+                />
+                <div
+                  style={{
+                    marginTop: 8,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 10,
+                  }}
+                >
+                  <p style={{ margin: 0, fontSize: 12, color: '#c0c0c0' }}>{note.label}</p>
                   <button
                     onClick={() => handleDelete(note.id)}
+                    aria-label="Buang kertas ini"
                     style={{
                       flexShrink: 0,
-                      width: 28,
-                      height: 28,
+                      width: 26,
+                      height: 26,
                       borderRadius: '50%',
                       border: 'none',
                       background: 'rgba(0,0,0,0.055)',
@@ -453,18 +495,11 @@ export default function TestPage() {
                       justifyContent: 'center',
                       cursor: 'pointer',
                       color: '#999',
-                      marginTop: -1,
                     }}
                   >
                     <TrashIcon />
                   </button>
                 </div>
-                {note.body && (
-                  <p style={{ margin: '5px 0 0', fontSize: 13.5, color: '#666', lineHeight: 1.5 }}>
-                    {note.body}
-                  </p>
-                )}
-                <p style={{ margin: '9px 0 0', fontSize: 11.5, color: '#c0c0c0' }}>{note.date}</p>
               </div>
             </div>
           ))
