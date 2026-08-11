@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 248 148" width="248" height="148">
+<defs>
+ <filter id="shadow" x="-20%" y="-30%" width="140%" height="170%"><feGaussianBlur stdDeviation="7"/></filter>
+ <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,255,255,.02)"/><stop offset="1" stop-color="rgba(0,0,0,.05)"/></linearGradient>
+ 
+</defs>
+<ellipse cx="124" cy="130" rx="118" ry="15" fill="rgba(0,0,0,.22)" filter="url(#shadow)"/>
+<rect x="0" y="0" width="248" height="148" rx="16" fill="#fff"/>
+<rect x="0" y="0" width="248" height="148" rx="16" fill="url(#shade)"/>
+</svg>

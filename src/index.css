@@ -189,13 +189,56 @@ html.is-scrolling ::-webkit-scrollbar-thumb {
     );
 }
 
-.paper-roll {
-  width: min(448px, 84vw);
+.letter-stack {
+  width: min(392px, 84vw);
+}
+
+/* Peeking state: paper stack translated down so only ~48px of paper 01 top is visible above the typewriter. */
+.letter-stack--peeking {
+  transform: translateY(max(0px, calc(100vh - 360px)));
+  transition: none;
+}
+
+.letter-stack--entering {
+  transform: translateY(0);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Covers the slim gap beneath the fixed machine so no paper can peek through. */
+.letters-paper-guard {
+  position: fixed;
+  z-index: 20;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 48px;
+  pointer-events: none;
+  background-color: #ffffff;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(22, 22, 30, 0.05) 0 46px,
+      transparent 46px 92px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(22, 22, 30, 0.05) 0 46px,
+      transparent 46px 92px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(22, 22, 30, 0.025) 0 4px,
+      transparent 4px 8px
+    );
+  background-position:
+    0 calc(100vh - 48px),
+    0 0,
+    0 calc(100vh - 48px);
 }
 
 .paper-page {
-  overflow: hidden;
-  padding: clamp(20px, 4vw, 38px) clamp(18px, 4vw, 37px) clamp(26px, 4.8vw, 45px);
+  margin: 0 auto 30px;
+  padding: clamp(24px, 4vw, 32px) clamp(18px, 4vw, 31px) clamp(30px, 4.8vw, 38px);
   background: #f8f6f0;
   background-image: repeating-linear-gradient(
     180deg,
@@ -217,9 +260,9 @@ html.is-scrolling ::-webkit-scrollbar-thumb {
 
 .tw {
   position: relative;
-  width: min(704px, 92vw);
+  width: min(608px, 92vw);
   margin: 0 auto;
-  --key: clamp(21px, 3.7vw, 37px);
+  --key: clamp(21px, 3.7vw, 31px);
 }
 
 /* Platen assembly: rod, rollers, knurled wheels and the return lever. */
@@ -444,14 +487,45 @@ html.is-scrolling ::-webkit-scrollbar-thumb {
 }
 
 .tw-space {
+  display: grid;
   width: 62%;
-  height: calc(var(--key) * 0.62);
+  min-height: calc(var(--key) * 0.86);
   margin: calc(var(--key) * 0.2) auto 0;
+  padding-block: calc(var(--key) * 0.17);
+  place-items: center;
+  border: 0;
   border-radius: calc(var(--key) * 0.16);
+  cursor: pointer;
+  font-family: 'Courier Prime', ui-monospace, monospace;
+  font-size: calc(var(--key) * 0.28);
+  letter-spacing: 0.1em;
+  line-height: 1;
   background: linear-gradient(180deg, #303037, #16161a);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.16),
     0 2px 4px rgba(0, 0, 0, 0.45);
+  transition:
+    transform 120ms var(--ease-out),
+    box-shadow 120ms var(--ease-out),
+    filter 120ms ease;
+}
+
+.tw-space.is-down {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.42);
+}
+
+.tw-space:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.82);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tw-space:hover {
+    filter: brightness(1.12);
+  }
 }
 
 .tw-hint {
@@ -468,8 +542,5 @@ html.is-scrolling ::-webkit-scrollbar-thumb {
   .tw-key,
   .tw-lever {
     transition: none;
-  }
-  .paper-roll {
-    transition-duration: 120ms !important;
   }
 }

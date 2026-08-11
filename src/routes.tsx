@@ -2,6 +2,7 @@ import { createBrowserRouter, Link, Outlet } from 'react-router'
 import PageTabs from './components/PageTabs'
 import PuzzlePage from './pages/PuzzlePage'
 import LettersPage from './pages/LettersPage'
+import TestPage from './pages/TestPage'
 
 function Root() {
   return (
@@ -36,6 +37,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: PuzzlePage },
       { path: 'letters', Component: LettersPage },
+      { path: 'test', Component: TestPage },
       { path: '*', Component: NotFound },
     ],
   },

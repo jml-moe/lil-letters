@@ -1,6 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import errorClickSound from "../imports/mixkit-click-error-1110.mp3"
+import selectClickSound from "../imports/mixkit-select-click-1109.mp3"
 
 type Sign = -1 | 0 | 1
+
+const LOREM_SOURCE = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
+const lorem = (length: number) =>
+  LOREM_SOURCE.repeat(Math.ceil(length / LOREM_SOURCE.length)).slice(0, length)
 
 type Piece = {
   fill: string
@@ -27,76 +33,76 @@ function layoutFor(width: number) {
 
 const PIECES: Piece[] = [
   {
-    fill: '#FBD9C1',
-    shade: '#F6C7A6',
-    ink: '#C3743F',
+    fill: "#FBD9C1",
+    shade: "#F6C7A6",
+    ink: "#C3743F",
     quote:
-      'Kamu tidak perlu melakukan hal luar biasa untuk jadi istimewa. Kamu sudah cukup, persis seperti ini.',
-    label: 'A LITTLE REMINDER',
+      lorem(100),
+    label: lorem(17).toUpperCase(),
     driftX: -0.34,
     driftY: -0.26,
     tilt: -6.5,
   },
   {
-    fill: '#C6D9F8',
-    shade: '#B2C9EF',
-    ink: '#5079BE',
+    fill: "#C6D9F8",
+    shade: "#B2C9EF",
+    ink: "#5079BE",
     quote:
-      'Semoga ada sesuatu yang kecil hari ini yang membuatmu tersenyum selebar itu.',
-    label: 'FOR YOUR SMILE',
+      lorem(76),
+    label: lorem(14).toUpperCase(),
     driftX: 0.1,
     driftY: -0.36,
     tilt: 4.5,
   },
   {
-    fill: '#D2E9B4',
-    shade: '#C0DE9C',
-    ink: '#75A044',
+    fill: "#D2E9B4",
+    shade: "#C0DE9C",
+    ink: "#75A044",
     quote:
-      'Kehadiranmu membuat hari seseorang terasa jauh lebih hangat. Iya, serius.',
-    label: 'JUST SO YOU KNOW',
+      lorem(73),
+    label: lorem(16).toUpperCase(),
     driftX: 0.33,
     driftY: -0.2,
     tilt: 7,
   },
   {
-    fill: '#FBCFE0',
-    shade: '#F5BAD1',
-    ink: '#CB6089',
+    fill: "#FBCFE0",
+    shade: "#F5BAD1",
+    ink: "#CB6089",
     quote:
-      'Pelan-pelan juga tidak apa-apa. Kamu tidak sedang terlambat ke mana-mana.',
-    label: 'TAKE YOUR TIME',
+      lorem(73),
+    label: lorem(14).toUpperCase(),
     driftX: -0.36,
     driftY: 0.24,
     tilt: 5.5,
   },
   {
-    fill: '#DDCFFB',
-    shade: '#CDBAF6',
-    ink: '#8567D3',
+    fill: "#DDCFFB",
+    shade: "#CDBAF6",
+    ink: "#8567D3",
     quote:
-      'Ada hal-hal baik yang datang ke dunia ini hanya karena kamu ada di dalamnya.',
-    label: 'A SMALL TRUTH',
+      lorem(76),
+    label: lorem(13).toUpperCase(),
     driftX: -0.04,
     driftY: 0.34,
     tilt: -5,
   },
   {
-    fill: '#C2E9DC',
-    shade: '#ACDECE',
-    ink: '#489B84',
+    fill: "#C2E9DC",
+    shade: "#ACDECE",
+    ink: "#489B84",
     quote:
-      'Semoga hari ini lembut padamu. Kalau tidak, semoga kamu tetap lembut pada dirimu sendiri.',
-    label: 'SOFT DAY AHEAD',
+      lorem(89),
+    label: lorem(14).toUpperCase(),
     driftX: 0.36,
     driftY: 0.28,
     tilt: -7,
   },
 ]
 
-const HINT_DEFAULT = 'Klik kepingan yang menyala untuk menyusunnya ♡'
-const HINT_WRONG = 'Yang menyala dulu, ya ✨'
-const HINT_DONE = 'Selesai. Semoga ada satu yang nyangkut di hatimu ♡'
+const HINT_DEFAULT = "Klik kepingan puzzle dari atas."
+const HINT_WRONG = "Berurutan yaa"
+const HINT_DONE = "Done, thank youuu."
 
 /**
  * Tabs alternate in a checkerboard so every seam has exactly one knob and one
@@ -106,10 +112,10 @@ function edgesFor(row: number, col: number, cols: number, rows: number) {
   const seamV = (r: number, c: number): Sign => ((r + c) % 2 === 0 ? 1 : -1)
   const seamH = (r: number, c: number): Sign => ((r + c) % 2 === 0 ? 1 : -1)
   return {
-    top: row === 0 ? 0 : ((-seamH(row - 1, col)) as Sign),
+    top: row === 0 ? 0 : -seamH(row - 1, col) as Sign,
     right: col === cols - 1 ? 0 : seamV(row, col),
     bottom: row === rows - 1 ? 0 : seamH(row, col),
-    left: col === 0 ? 0 : ((-seamV(row, col - 1)) as Sign),
+    left: col === 0 ? 0 : -seamV(row, col - 1) as Sign,
   }
 }
 
@@ -139,7 +145,7 @@ function side(
     `C ${at(0.3, 0.22)} ${at(0.31, 0.62)} ${at(0.5, 0.62)}`,
     `C ${at(0.69, 0.62)} ${at(0.7, 0.22)} ${at(0.64, 0)}`,
     `L ${bx} ${by}`,
-  ].join(' ')
+  ].join(" ")
 }
 
 function outline(
@@ -163,22 +169,39 @@ function outline(
     side(x1, y0, x1, y1, e.right, knob),
     side(x1, y1, x0, y1, e.bottom, knob),
     side(x0, y1, x0, y0, e.left, knob),
-    'Z',
-  ].join(' ')
+    "Z",
+  ].join(" ")
 }
 
 export default function PuzzlePage() {
   const stageRef = useRef<HTMLDivElement>(null)
-  const [boardW, setBoardW] = useState(1020)
+  const [boardW, setBoardW] = useState(820)
   const [placed, setPlaced] = useState(0)
   const [hint, setHint] = useState(HINT_DEFAULT)
   const [shaking, setShaking] = useState<number | null>(null)
   const [round, setRound] = useState(0)
+  const selectSound = useRef<HTMLAudioElement | null>(null)
+  const errorSound = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    const select = new Audio(selectClickSound)
+    const error = new Audio(errorClickSound)
+    select.volume = 0.28
+    error.volume = 0.25
+    selectSound.current = select
+    errorSound.current = error
+    return () => {
+      select.pause()
+      error.pause()
+      selectSound.current = null
+      errorSound.current = null
+    }
+  }, [])
 
   useLayoutEffect(() => {
     const el = stageRef.current
     if (!el) return
-    const measure = () => setBoardW(Math.min(el.clientWidth, 1020))
+    const measure = () => setBoardW(Math.min(el.clientWidth, 820))
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(el)
@@ -195,16 +218,16 @@ export default function PuzzlePage() {
   useEffect(() => {
     let id = 0
     const onScroll = () => {
-      document.documentElement.classList.add('is-scrolling')
+      document.documentElement.classList.add("is-scrolling")
       window.clearTimeout(id)
       id = window.setTimeout(
-        () => document.documentElement.classList.remove('is-scrolling'),
+        () => document.documentElement.classList.remove("is-scrolling"),
         700,
       )
     }
-    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener("scroll", onScroll, { passive: true })
     return () => {
-      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener("scroll", onScroll)
       window.clearTimeout(id)
     }
   }, [])
@@ -225,6 +248,11 @@ export default function PuzzlePage() {
 
   const handleClick = (index: number) => {
     if (index < placed) return
+    const sound = index === placed ? selectSound.current : errorSound.current
+    if (sound) {
+      sound.currentTime = 0
+      void sound.play().catch(() => undefined)
+    }
     if (index === placed) {
       setPlaced(index + 1)
       setHint(index + 1 === PIECES.length ? HINT_DONE : HINT_DEFAULT)
@@ -244,9 +272,10 @@ export default function PuzzlePage() {
     <main className="min-h-screen w-full overflow-x-hidden bg-white px-4 pb-20 pt-24 sm:px-6 sm:pb-28 sm:pt-28">
       <header className="mx-auto max-w-2xl text-center">
         <p className="mono text-[11px] tracking-[0.22em] text-[#9a9aa4]">
-          FOR SOMEONE SPECIAL
+          {/* FOR SOMEONE SPECIAL  */}
+          Just a small token of kindness
         </p>
-        <h1 className="mt-4 text-[clamp(1.9rem,6vw,3.1rem)] font-bold leading-[1.08] tracking-[-0.03em] text-[#16161a]">
+        <h1 className="mt-4 text-[clamp(1.9rem,6vw,2.45rem)] font-bold leading-[1.08] tracking-[-0.03em] text-[#16161a]">
           A little quote for you.
         </h1>
         <p
@@ -259,7 +288,7 @@ export default function PuzzlePage() {
 
       <section
         ref={stageRef}
-        className="mx-auto mt-10 w-full max-w-[1020px] sm:mt-20"
+        className="mx-auto mt-10 w-full max-w-[820px] sm:mt-20"
       >
         <div
           className="relative mx-auto"
@@ -288,14 +317,17 @@ export default function PuzzlePage() {
                 >
                   <div
                     className="absolute inset-0"
-                    style={{ background: '#d6d6dc', clipPath: `path('${path}')` }}
+                    style={{
+                      background: "#d6d6dc",
+                      clipPath: `path('${path}')`,
+                    }}
                   />
                   <div
                     className="absolute inset-0"
                     style={{
-                      background: '#ffffff',
+                      background: "#ffffff",
                       clipPath: `path('${path}')`,
-                      transform: 'scale(0.9975)',
+                      transform: "scale(0.9975)",
                     }}
                   />
                 </div>
@@ -316,7 +348,7 @@ export default function PuzzlePage() {
             const isPlaced = i < placed
             const isActive = i === placed
             const rest = isPlaced
-              ? 'translate(0px, 0px) rotate(0deg)'
+              ? "translate(0px, 0px) rotate(0deg)"
               : `translate(${(p.driftX * pw * driftScaleX).toFixed(1)}px, ${(p.driftY * ph * driftScaleY).toFixed(1)}px) rotate(${(p.tilt * tiltScale).toFixed(1)}deg)`
 
             return (
@@ -327,17 +359,17 @@ export default function PuzzlePage() {
                 aria-label={`Kepingan ${i + 1}`}
                 onClick={() => handleClick(i)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
+                  if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault()
                     handleClick(i)
                   }
                 }}
                 className={[
-                  'piece outline-none',
-                  isPlaced ? '' : 'is-loose',
-                  isActive ? 'is-active' : '',
-                  shaking === i ? 'is-shaking' : '',
-                ].join(' ')}
+                  "piece outline-none",
+                  isPlaced ? "" : "is-loose",
+                  isActive ? "is-active" : "",
+                  shaking === i ? "is-shaking" : "",
+                ].join(" ")}
                 style={
                   {
                     left: col * pw - pad,
@@ -345,8 +377,8 @@ export default function PuzzlePage() {
                     width: pw + pad * 2,
                     height: ph + pad * 2,
                     zIndex: isPlaced ? 10 + i : 30 + i,
-                    '--rest': rest,
-                    '--glow': `${p.ink}66`,
+                    "--rest": rest,
+                    "--glow": `${p.ink}66`,
                   } as React.CSSProperties
                 }
               >
@@ -362,7 +394,7 @@ export default function PuzzlePage() {
                 <div
                   className="absolute inset-0"
                   style={{
-                    background: 'rgba(24, 24, 32, 0.13)',
+                    background: "rgba(24, 24, 32, 0.13)",
                     clipPath: `path('${path}')`,
                     transform: `translateY(${(depth * 1.7).toFixed(1)}px)`,
                     filter: `blur(${(depth * 0.8).toFixed(1)}px)`,
@@ -384,7 +416,9 @@ export default function PuzzlePage() {
                   }}
                 />
                 <div
-                  className={`quote-body absolute ${isPlaced ? 'is-visible' : ''}`}
+                  className={`quote-body absolute ${
+                    isPlaced ? "is-visible" : ""
+                  }`}
                   style={{
                     left: pad + leftIns,
                     top: pad + topIns,
@@ -393,7 +427,11 @@ export default function PuzzlePage() {
                 >
                   <span
                     className="block font-bold leading-none"
-                    style={{ color: p.ink, fontSize: 28 * scale, opacity: 0.75 }}
+                    style={{
+                      color: p.ink,
+                      fontSize: 28 * scale,
+                      opacity: 0.75,
+                    }}
                   >
                     &ldquo;
                   </span>
@@ -431,14 +469,13 @@ export default function PuzzlePage() {
           className="replay mono rounded-full border border-[#e6e6ec] px-6 py-3 text-[11px] tracking-[0.16em] text-[#5c5c66] hover:border-[#d0d0da] hover:bg-[#fafafc]"
           style={{
             opacity: done ? 1 : 0,
-            transform: done ? 'none' : 'translateY(8px)',
-            pointerEvents: done ? 'auto' : 'none',
+            transform: done ? "none" : "translateY(8px)",
+            pointerEvents: done ? "auto" : "none",
           }}
         >
-          main lagi ↻
+          {lorem(11)}
         </button>
       </div>
-
     </main>
   )
 }

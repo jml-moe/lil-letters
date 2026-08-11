@@ -1,5 +1,5 @@
-import { Tabs } from '@cloudflare/kumo'
-import { useLocation, useNavigate } from 'react-router'
+import { Tabs } from "@cloudflare/kumo"
+import { useLocation, useNavigate } from "react-router"
 
 /** Small stroke icons, inline so the tab bar carries no icon dependency. */
 function PuzzleIcon() {
@@ -43,31 +43,31 @@ function LetterIcon() {
  * ink once selected — the white pill behind it is the Kumo indicator.
  */
 const TAB_CLASS = [
-  'my-0 h-[30px] w-[9.5rem] flex-1 items-center justify-center gap-1.5',
-  'rounded-[6px] px-3 text-[12px] font-medium leading-none tracking-[0]',
-  'text-[#16161a]/55 hover:text-[#16161a]/80',
-  'aria-selected:text-[#16161a] aria-selected:hover:text-[#16161a]',
-  'transition-[color,transform] duration-200 active:scale-[0.98]',
-].join(' ')
+  "my-0 h-[30px] w-[9.5rem] flex-1 items-center justify-center gap-1.5",
+  "rounded-[6px] px-3 text-[12px] font-medium leading-none tracking-[0]",
+  "text-[#16161a]/55 hover:text-[#16161a]/80",
+  "aria-selected:text-[#16161a] aria-selected:hover:text-[#16161a]",
+  "transition-[color,transform] duration-200 active:scale-[0.98]",
+].join(" ")
 
 const TABS = [
   {
-    value: '/',
+    value: "/",
     className: TAB_CLASS,
     label: (
       <span className="flex items-center gap-1.5">
         <PuzzleIcon />
-        Puzzle quote
+        Puzzle
       </span>
     ),
   },
   {
-    value: '/letters',
+    value: "/letters",
     className: TAB_CLASS,
     label: (
       <span className="flex items-center gap-1.5">
         <LetterIcon />
-        Surat mesin tik
+        Letters
       </span>
     ),
   },
@@ -77,7 +77,7 @@ const TABS = [
 export default function PageTabs() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const value = pathname === '/letters' ? '/letters' : '/'
+  const value = pathname === "/letters" ? "/letters" : "/"
 
   return (
     <div className="page-tabs fixed left-1/2 top-4 z-50 -translate-x-1/2">

@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import typewriterHitSound from '../imports/mixkit-typewriter-hard-hit-1367.mp3'
 
 const KEY_ROWS = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM']
 const KEY_COUNT = KEY_ROWS.join('').length
+const ROW_SHIFT_STEPS = [0, -0.5, -1]
 
 type TypewriterProps = {
   /** True while a page is rolling out — the machine taps keys. */
@@ -24,6 +26,17 @@ export default function Typewriter({
 }: TypewriterProps) {
   const [pressed, setPressed] = useState(-1)
   const [pulling, setPulling] = useState(false)
+  const typewriterSound = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    const sound = new Audio(typewriterHitSound)
+    sound.volume = 0.32
+    typewriterSound.current = sound
+    return () => {
+      sound.pause()
+      typewriterSound.current = null
+    }
+  }, [])
 
   useEffect(() => {
     if (!typing) {
@@ -37,6 +50,11 @@ export default function Typewriter({
   }, [typing])
 
   const pull = useCallback(() => {
+    const sound = typewriterSound.current
+    if (sound) {
+      sound.currentTime = 0
+      void sound.play().catch(() => undefined)
+    }
     setPulling(true)
     window.setTimeout(() => setPulling(false), 260)
     onReturn()
@@ -50,6 +68,7 @@ export default function Typewriter({
         <button
           type="button"
           className={`tw-lever${pulling ? ' is-pulled' : ''}`}
+          style={{ marginLeft: '-6px', marginRight: 0 }}
           onClick={pull}
           aria-label="Tarik tuas carriage return"
         >
@@ -70,7 +89,14 @@ export default function Typewriter({
 
       <div className="tw-body">
         {KEY_ROWS.map((row, r) => (
-          <div className="tw-row" key={row} style={{ paddingLeft: r * 6 + '%' }}>
+          <div
+            className="tw-row"
+            key={row}
+            style={{
+              paddingLeft: r * 6 + '%',
+              transform: `translateX(calc(var(--key) * ${ROW_SHIFT_STEPS[r] * 1.28}))`,
+            }}
+          >
             {row.split('').map((letter) => {
               keyIndex += 1
               const isDown = keyIndex === pressed
@@ -85,7 +111,15 @@ export default function Typewriter({
             })}
           </div>
         ))}
-        <div className="tw-space" />
+        <button
+          type="button"
+          className={`tw-space${pulling ? ' is-down' : ''}`}
+          style={{ textAlign: 'center', fontWeight: 700, color: 'rgb(161, 161, 161)' }}
+          onClick={pull}
+          aria-label="Lanjut ke lembar surat berikutnya"
+        >
+          CLICK HERE OR JUST SCROLL
+        </button>
       </div>
 
       {leverHint && <p className="tw-hint">{leverHint}</p>}

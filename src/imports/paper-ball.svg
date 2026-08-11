@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+<defs>
+ <radialGradient id="ballg" cx="38%" cy="32%" r="78%"><stop offset="0%" stop-color="#fff"/><stop offset="60%" stop-color="#f0efeb"/><stop offset="100%" stop-color="#d9d8d1"/></radialGradient>
+ <filter id="ball-sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="2.2" flood-color="rgba(20,20,24,.35)"/></filter>
+ <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="6" stitchTiles="stitch" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.35 0"/></filter>
+ <clipPath id="ball-clip"><path d="M50 9 L62 11 L73 17 L82 27 L88 39 L91 52 L87 64 L80 75 L70 83 L57 89 L44 88 L32 83 L22 74 L16 63 L11 51 L14 38 L20 28 L29 19 L39 12 Z"/></clipPath>
+</defs>
+<g filter="url(#ball-sh)">
+ <path d="M50 9 L62 11 L73 17 L82 27 L88 39 L91 52 L87 64 L80 75 L70 83 L57 89 L44 88 L32 83 L22 74 L16 63 L11 51 L14 38 L20 28 L29 19 L39 12 Z" fill="url(#ballg)" stroke="#cfcec8" stroke-width=".6" stroke-linejoin="round"/>
+ <g clip-path="url(#ball-clip)">
+  <polygon points="38 12 50 9 45 40 35 56 22 74 16 63 11 51 19 28 29 19" fill="rgba(255,255,255,.6)"/>
+  <polygon points="50 9 62 11 73 17 62 31 57 46 45 40" fill="rgba(255,255,255,.3)"/>
+  <polygon points="57 46 67 62 70 83 57 89 44 88 50 60" fill="rgba(96,96,90,.28)"/>
+  <polygon points="50 60 67 62 57 89 44 88" fill="rgba(96,96,90,.18)"/>
+  <path d="M70 40 C92 52 90 78 74 88 C64 94 48 92 44 86 C66 86 80 64 70 40 Z" fill="rgba(78,78,72,.3)" filter="blur(3px)"/>
+  <ellipse cx="38" cy="32" rx="16" ry="13" fill="rgba(255,255,255,.35)" filter="blur(4px)"/>
+  <rect x="0" y="0" width="100" height="100" filter="url(#grain)" opacity=".28"/>
+ </g>
+ <g fill="none" stroke="rgba(108,108,100,.55)" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#ball-clip)">
+  <path d="M40 27 L45 40 L50 60 L46 88"/><path d="M62 30 L57 46 L67 62 L70 83"/><path d="M45 40 L57 46"/><path d="M45 40 L35 56 L22 74"/><path d="M57 46 L67 62"/><path d="M50 60 L35 56"/><path d="M50 9 L40 27"/><path d="M50 9 L62 30"/>
+ </g>
+ <g fill="none" stroke="rgba(255,255,255,.7)" stroke-width=".7" stroke-linecap="round" clip-path="url(#ball-clip)">
+  <path d="M44 39 L34 55"/><path d="M58 45 L66 61"/><path d="M50 60 L46 86"/><path d="M41 28 L46 40"/>
+ </g>
+</g>
+</svg>
