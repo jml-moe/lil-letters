@@ -1,4 +1,4 @@
-import { createBrowserRouter, Link, Outlet } from 'react-router'
+import { createHashRouter, Link, Outlet } from 'react-router'
 import PageTabs from './components/PageTabs'
 import PuzzlePage from './pages/PuzzlePage'
 import LettersPage from './pages/LettersPage'
@@ -30,7 +30,7 @@ function NotFound() {
   )
 }
 
-export const router = createBrowserRouter([
+export const router = createHashRouter([
   {
     path: '/',
     Component: Root,
