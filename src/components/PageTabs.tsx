@@ -59,6 +59,25 @@ function CrumpleIcon() {
   )
 }
 
+function SunIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M6.5 17a5.5 5.5 0 0 1 11 0" />
+      <path d="M3 17h18M12 6.5V4M5.2 9.2 3.6 7.6M18.8 9.2l1.6-1.6M8 20.5h8" />
+    </svg>
+  )
+}
+
 /**
  * Segment styling: 12px medium label, 6px radius, muted when idle and full
  * ink once selected — the white pill behind it is the Kumo indicator.
@@ -102,6 +121,16 @@ const TABS = [
       </span>
     ),
   },
+  {
+    value: "/untukmu",
+    className: TAB_CLASS,
+    label: (
+      <span className="flex min-w-0 items-center justify-center gap-1 sm:gap-1.5">
+        <SunIcon />
+        Untukmu
+      </span>
+    ),
+  },
 ]
 
 /** Centered segmented tabs that switch between the app pages. */
@@ -111,7 +140,7 @@ export default function PageTabs() {
   const value = TABS.some((tab) => tab.value === pathname) ? pathname : "/"
 
   return (
-    <div className="page-tabs fixed left-1/2 top-4 z-50 w-[calc(100vw-16px)] max-w-[22rem] -translate-x-1/2 sm:w-auto sm:max-w-none">
+    <div className="page-tabs fixed left-1/2 top-4 z-50 w-[calc(100vw-16px)] max-w-[26rem] -translate-x-1/2 sm:w-auto sm:max-w-none">
       <Tabs
         tabs={TABS}
         value={value}
@@ -119,7 +148,7 @@ export default function PageTabs() {
           if (next !== value) navigate(next)
         }}
         className="w-full rounded-[9px] shadow-none ring-0"
-        listClassName="m-0 grid h-9 w-full grid-cols-3 gap-0 overflow-visible rounded-[9px] border border-[#16161a]/[0.10] bg-[#f1f1f3] p-[3px] shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_1px_2px_rgba(20,24,18,0.10)]"
+        listClassName="m-0 grid h-9 w-full grid-cols-4 gap-0 overflow-visible rounded-[9px] border border-[#16161a]/[0.10] bg-[#f1f1f3] p-[3px] shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_1px_2px_rgba(20,24,18,0.10)]"
         indicatorClassName="rounded-[6px] bg-white shadow-[0_1px_2px_rgba(20,24,18,0.16)] ring-0"
       />
     </div>

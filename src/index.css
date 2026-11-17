@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=DM+Mono:wght@400;500&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+@import 'allo-font';
 @import 'tailwindcss';
 @import '@cloudflare/kumo/styles/tailwind';
 
@@ -548,4 +549,38 @@ html.is-scrolling ::-webkit-scrollbar-thumb {
   .tw-lever {
     transition: none;
   }
+}
+
+/* ─── Untukmu: the drawing and the letter ──────────────────────────────────── */
+.allo {
+  font-family: 'Allo', 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+.untukmu {
+  background:
+    radial-gradient(120% 60% at 50% 0%, #efe3f3 0%, transparent 60%),
+    #f6efe1;
+}
+
+/* Laptop: the whole 16:9 drawing fits in the first screen under the tabs. */
+.sunrise-frame {
+  aspect-ratio: 16 / 9;
+  width: min(100%, calc((100svh - 132px) * 16 / 9));
+  min-width: min(100%, 560px);
+}
+
+/* Phones get a taller 4:5 composition of the same scene. */
+.sunrise-frame[data-layout='portrait'] {
+  aspect-ratio: 4 / 5;
+  width: 100%;
+  min-width: 0;
+}
+
+.letter-sheet {
+  background: #fffaf0;
+  border-radius: 4px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 24px 48px -28px rgba(43, 35, 80, 0.45),
+    0 2px 5px rgba(43, 35, 80, 0.1);
 }
