@@ -3,6 +3,7 @@ import PageTabs from './components/PageTabs'
 import PuzzlePage from './pages/PuzzlePage'
 import LettersPage from './pages/LettersPage'
 import TestPage from './pages/TestPage'
+import UntukmuPage from './pages/UntukmuPage'
 
 function Root() {
   return (
@@ -38,6 +39,7 @@ export const router = createHashRouter([
       { index: true, Component: PuzzlePage },
       { path: 'letters', Component: LettersPage },
       { path: 'test', Component: TestPage },
+      { path: 'untukmu', Component: UntukmuPage },
       { path: '*', Component: NotFound },
     ],
   },
