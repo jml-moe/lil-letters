@@ -6,6 +6,7 @@ import { bakeFrame, bakeTop, buildGeo, makeLayout } from "../art/scene"
 const PORTRAIT_QUERY = "(max-width: 639px)"
 const BOIL_FRAMES = 3
 const BOIL_MS = 125
+const RENDER_SCALE = 0.6
 
 /** Optional `?t=12` after the hash freezes the loop at that second (handy for stills). */
 function frozenTime(): number | null {
@@ -32,7 +33,7 @@ export default function SunriseCanvas() {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const ctx = canvas.getContext("2d")
+    const ctx = canvas.getContext("2d", { desynchronized: true })
     if (!ctx) return
 
     let cancelled = false
@@ -42,8 +43,10 @@ export default function SunriseCanvas() {
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     const frozen = frozenTime()
     const layout = makeLayout(portrait)
-    canvas.width = layout.W
-    canvas.height = layout.H
+    // Keep the drawing crisp enough on screen without rendering unused pixels.
+    canvas.width = Math.round(layout.W * RENDER_SCALE)
+    canvas.height = Math.round(layout.H * RENDER_SCALE)
+    ctx.imageSmoothingEnabled = true
     setReady(false)
 
     const frames: HTMLCanvasElement[] = []
@@ -51,8 +54,8 @@ export default function SunriseCanvas() {
     let clock = 0
     let lastTick = 0
     let lastDraw = 0
-    // Phones draw at 24 fps: steadier, and closer to a hand-drawn loop anyway.
-    const frameMs = 1000 / (portrait ? 24 : 30)
+    // A lower frame rate keeps the hand-drawn loop steady without wasting work.
+    const frameMs = 1000 / (portrait ? 20 : 24)
 
     const start = async () => {
       // The notes are lettered in Allo, so wait for it before drawing them.
@@ -67,7 +70,7 @@ export default function SunriseCanvas() {
 
       const paint = (time: number, boil: number) => {
         if (!frames.length || !top) return
-        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        ctx.setTransform(RENDER_SCALE, 0, 0, RENDER_SCALE, 0, 0)
         ctx.globalAlpha = 1
         ctx.globalCompositeOperation = "source-over"
         ctx.drawImage(frames[boil % frames.length], 0, 0)
