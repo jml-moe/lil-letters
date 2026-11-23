@@ -3,7 +3,6 @@ import PageTabs from './components/PageTabs'
 import PuzzlePage from './pages/PuzzlePage'
 import LettersPage from './pages/LettersPage'
 import TestPage from './pages/TestPage'
-import UntukmuPage from './pages/UntukmuPage'
 
 function Root() {
   return (
@@ -39,7 +38,11 @@ export const router = createHashRouter([
       { index: true, Component: PuzzlePage },
       { path: 'letters', Component: LettersPage },
       { path: 'test', Component: TestPage },
-      { path: 'untukmu', Component: UntukmuPage },
+      {
+        // Loaded only when someone opens this tab: the drawing code and its font stay out of the other pages.
+        path: 'untukmu',
+        lazy: async () => ({ Component: (await import('./pages/UntukmuPage')).default }),
+      },
       { path: '*', Component: NotFound },
     ],
   },

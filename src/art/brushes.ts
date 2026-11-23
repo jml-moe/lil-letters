@@ -1,6 +1,25 @@
 import { type RNG, clamp, gauss, mulberry32, pick, rr, smooth } from "./rng"
 
 export type RGB = [number, number, number]
+
+/**
+ * The drawing code runs both on the page and inside a Web Worker. OffscreenCanvas
+ * and its 2D context behave like their DOM counterparts for everything used here,
+ * so both are typed as the DOM versions.
+ */
+export type Canvas = HTMLCanvasElement
+
+export function makeCanvas(w: number, h: number): Canvas {
+  if (typeof OffscreenCanvas !== "undefined") return new OffscreenCanvas(w, h) as unknown as Canvas
+  const cv = document.createElement("canvas")
+  cv.width = w
+  cv.height = h
+  return cv
+}
+
+export function ctx2d(cv: Canvas): CanvasRenderingContext2D {
+  return cv.getContext("2d") as CanvasRenderingContext2D
+}
 export type Pt = [number, number]
 type Ctx = CanvasRenderingContext2D
 
@@ -200,9 +219,8 @@ export function sparkle(c: Ctx, x: number, y: number, s: number, col: string, al
 // ─── Paper tooth ──────────────────────────────────────────────────────────────
 
 function makeTile(size: number, fill: (x: number, y: number, out: Uint8ClampedArray, i: number) => void) {
-  const cv = document.createElement("canvas")
-  cv.width = cv.height = size
-  const c = cv.getContext("2d")!
+  const cv = makeCanvas(size, size)
+  const c = ctx2d(cv)
   const img = c.createImageData(size, size)
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) fill(x, y, img.data, (y * size + x) * 4)
   c.putImageData(img, 0, 0)
@@ -226,9 +244,9 @@ function lattice(r: RNG, gx: number, gy: number) {
 }
 
 export interface Tiles {
-  streak: HTMLCanvasElement
-  fine: HTMLCanvasElement
-  grain: HTMLCanvasElement
+  streak: Canvas
+  fine: Canvas
+  grain: Canvas
 }
 
 let cached: Tiles | null = null
@@ -273,28 +291,33 @@ export function getTiles(): Tiles {
 /**
  * Draws each element on a scratch sheet, knocks the paper tooth out of it, then
  * lays it on the painting — so every layer keeps its own dry-media grain.
+ *
+ * `k` scales the logical scene (1920×1080 or 1080×1350) down to the pixels the
+ * screen actually needs, which is where most of the speed comes from.
  */
 export class Painter {
-  cv: HTMLCanvasElement
+  cv: Canvas
   c: Ctx
-  private scr: HTMLCanvasElement
+  private scr: Canvas
   private s: Ctx
   private pat: Record<"streak" | "fine", CanvasPattern>
+  private pw: number
+  private ph: number
 
   constructor(
     public W: number,
     public H: number,
     public r: RNG,
+    public k = 1,
   ) {
     const tiles = getTiles()
-    this.cv = document.createElement("canvas")
-    this.cv.width = W
-    this.cv.height = H
-    this.c = this.cv.getContext("2d")!
-    this.scr = document.createElement("canvas")
-    this.scr.width = W
-    this.scr.height = H
-    this.s = this.scr.getContext("2d")!
+    this.pw = Math.round(W * k)
+    this.ph = Math.round(H * k)
+    this.cv = makeCanvas(this.pw, this.ph)
+    this.c = ctx2d(this.cv)
+    this.c.setTransform(k, 0, 0, k, 0, 0)
+    this.scr = makeCanvas(this.pw, this.ph)
+    this.s = ctx2d(this.scr)
     this.pat = {
       streak: this.s.createPattern(tiles.streak, "repeat")!,
       fine: this.s.createPattern(tiles.fine, "repeat")!,
@@ -302,15 +325,17 @@ export class Painter {
   }
 
   layer(draw: (c: Ctx) => void, tooth: "streak" | "fine" | "none" = "streak", amt = 1) {
-    const { s, W, H } = this
+    const { s, pw, ph, k } = this
     s.setTransform(1, 0, 0, 1, 0, 0)
     s.globalAlpha = 1
     s.globalCompositeOperation = "source-over"
-    s.clearRect(0, 0, W, H)
+    s.clearRect(0, 0, pw, ph)
     s.save()
+    s.setTransform(k, 0, 0, k, 0, 0)
     draw(s)
     s.restore()
     if (tooth !== "none" && amt > 0) {
+      // The tooth stays at screen-pixel size, like real paper under a crayon.
       s.save()
       s.globalCompositeOperation = "destination-out"
       s.globalAlpha = amt
@@ -318,9 +343,18 @@ export class Painter {
       const ox = Math.floor(this.r() * 700)
       const oy = Math.floor(this.r() * 700)
       s.translate(-ox, -oy)
-      s.fillRect(0, 0, W + 700, H + 700)
+      s.fillRect(0, 0, pw + 700, ph + 700)
       s.restore()
     }
+    this.c.save()
+    this.c.setTransform(1, 0, 0, 1, 0, 0)
     this.c.drawImage(this.scr, 0, 0)
+    this.c.restore()
+  }
+
+  /** Free the scratch sheet as soon as the frame is done. */
+  done() {
+    this.scr.width = this.scr.height = 1
+    return this.cv
   }
 }

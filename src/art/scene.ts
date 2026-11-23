@@ -1,4 +1,4 @@
-import { type Pt, type RGB, Painter, crayon, css, hex, jit, mix, pencil, scumble, trace, wobble } from "./brushes"
+import { type Canvas, type Pt, type RGB, Painter, crayon, css, ctx2d, getTiles, hex, jit, makeCanvas, mix, pencil, scumble, trace, wobble } from "./brushes"
 import { type RNG, clamp, gauss, lerp, mulberry32, pick, rr } from "./rng"
 
 type Ctx = CanvasRenderingContext2D
@@ -149,9 +149,9 @@ export interface Geo {
   annots: Annot[]
 }
 
-const WALLS = ["#8f72b4", "#a985bd", "#7a66a6", "#c495b9", "#9c7fb0", "#b79ac8"].map(hex)
-const ROOFS = ["#46346f", "#b4607e", "#3c3168", "#8d4a78", "#57407f"].map(hex)
-const CONFETTI = ["#ffe08a", "#ff9fc4", "#9fe6d4", "#cdbcff", "#fff3dc", "#ffb38a", "#a8e6a1"]
+const WALLS = ["#e2a77f", "#eec29a", "#d18e6c", "#f1d1a6", "#c98a74", "#e8b48c"].map(hex)
+const ROOFS = ["#a4473a", "#c05b3c", "#3f4c68", "#8a3d36", "#5b4a5a"].map(hex)
+const CONFETTI = ["#ffe08a", "#ff9fc4", "#9fe6d4", "#ffd0b0", "#fff3dc", "#ffb38a", "#a8e6a1"]
 
 function bez(p: [Pt, Pt, Pt, Pt], t: number): Pt {
   const m = 1 - t
@@ -266,8 +266,8 @@ export function buildGeo(L: Layout): Geo {
           h,
           roof: rr(r, 20, 42) * s,
           hip: r() < 0.4,
-          wall: mix(pick(r, WALLS), hex("#8a70bd"), row ? 0.45 : 0),
-          roofCol: mix(pick(r, ROOFS), hex("#6a55a6"), row ? 0.4 : 0),
+          wall: mix(pick(r, WALLS), hex("#c98f7c"), row ? 0.45 : 0),
+          roofCol: mix(pick(r, ROOFS), hex("#8f6a72"), row ? 0.4 : 0),
           row,
           wins,
         })
@@ -362,7 +362,7 @@ export function buildGeo(L: Layout): Geo {
   }
 
   const flowers: Geo["flowers"] = []
-  const fcols = ["#ff9fc4", "#ffe08a", "#fff3dc", "#cdbcff"].map(hex)
+  const fcols = ["#ff9fc4", "#ffe08a", "#fff3dc", "#ffd0b0"].map(hex)
   for (let i = 0; i < (L.portrait ? 46 : 70); i++) {
     const x = r() * W
     const y = rr(r, L.fg + 26, H - 26)
@@ -386,7 +386,7 @@ export function buildGeo(L: Layout): Geo {
           ],
         },
         {
-          text: "silver, obviously",
+          text: "perak, tentu saja",
           x: star[0] + 250,
           y: star[1] + 62,
           rot: 0.05,
@@ -397,7 +397,7 @@ export function buildGeo(L: Layout): Geo {
           ],
         },
         {
-          text: "kotaku. ternyata sebelahan",
+          text: "kotaku, ternyata sebelahan",
           x: 0.725 * W,
           y: 0.805 * H,
           rot: -0.035,
@@ -421,7 +421,7 @@ export function buildGeo(L: Layout): Geo {
           ],
         },
         {
-          text: "silver, obviously",
+          text: "perak, tentu saja",
           x: star[0] + 218,
           y: star[1] - 34,
           rot: -0.05,
@@ -432,7 +432,7 @@ export function buildGeo(L: Layout): Geo {
           ],
         },
         {
-          text: "kotaku. ternyata sebelahan",
+          text: "kotaku, ternyata sebelahan",
           x: 0.815 * W,
           y: 0.535 * H,
           rot: -0.03,
@@ -472,16 +472,16 @@ export function buildGeo(L: Layout): Geo {
 // ─── Colour ───────────────────────────────────────────────────────────────────
 
 const SKY: [number, RGB][] = [
-  [0, hex("#17133a")],
-  [0.2, hex("#2a2163")],
-  [0.42, hex("#52398f")],
-  [0.62, hex("#8f5bb2")],
-  [0.78, hex("#dc86b6")],
-  [0.91, hex("#f7ad8c")],
-  [1, hex("#fdd9a4")],
+  [0, hex("#16233f")],
+  [0.2, hex("#22426a")],
+  [0.42, hex("#3f6d8f")],
+  [0.62, hex("#c9877a")],
+  [0.78, hex("#f0905e")],
+  [0.91, hex("#f8b05a")],
+  [1, hex("#fdd889")],
 ]
-const NIGHT = hex("#120e30")
-const WARM = hex("#ffc490")
+const NIGHT = hex("#0f1a33")
+const WARM = hex("#ffb068")
 
 export function skyColor(L: Layout, x: number, y: number): RGB {
   const t = clamp(y / L.hor)
@@ -507,18 +507,18 @@ const rect = (x: number, y: number, w: number, h: number): Pt[] => [
   [x, y + h],
 ]
 
-const INK = hex("#241a4d")
+const INK = hex("#2a2430")
 
 function drawHouse(c: Ctx, r: RNG, h: House) {
   const s = h.w / 90
   const wall = wobble(rect(h.x, h.y - h.h, h.w, h.h + 4), r, 1.6, 16)
-  crayon(c, r, wall, [h.wall, mix(h.wall, hex("#5a4390"), 0.3)], { ang: 1.45, sp: 6, len: [14, 40], w: [3, 7], base: 0.8 })
+  crayon(c, r, wall, [h.wall, mix(h.wall, hex("#8a4f45"), 0.3)], { ang: 1.45, sp: 6, len: [14, 40], w: [3, 7], base: 0.8 })
   // Dawn catches the sun-facing edge.
   c.save()
   c.beginPath()
   trace(c, wall)
   c.clip()
-  scumble(c, r, h.x + h.w * 0.94, h.y - h.h * 0.5, h.w * 0.12, h.h * 0.5, [hex("#ffc6a0"), hex("#ff9fc4")], 16, { w: [3, 8], a: [0.12, 0.3], rad: [5, 14] })
+  scumble(c, r, h.x + h.w * 0.94, h.y - h.h * 0.5, h.w * 0.12, h.h * 0.5, [hex("#ffc27e"), hex("#ff9a6a")], 16, { w: [3, 8], a: [0.12, 0.3], rad: [5, 14] })
   c.restore()
   const top = h.y - h.h
   const roof: Pt[] = h.hip
@@ -535,7 +535,7 @@ function drawHouse(c: Ctx, r: RNG, h: House) {
       ]
   crayon(c, r, wobble(roof, r, 1.4, 14), [h.roofCol, mix(h.roofCol, INK, 0.35)], { ang: 0.25, sp: 5, len: [12, 34], w: [3, 6], base: 0.85 })
   for (const w of h.wins) {
-    const col = w.lit ? pick(r, [hex("#ffd67a"), hex("#ffc27a"), hex("#ffe6a0")]) : hex("#3a2f66")
+    const col = w.lit ? pick(r, [hex("#ffd67a"), hex("#ffc27a"), hex("#ffe6a0")]) : hex("#4a3a3c")
     c.globalAlpha = w.lit ? 0.95 : 0.7
     c.fillStyle = css(jit(col, r, 8))
     c.beginPath()
@@ -553,7 +553,7 @@ function drawStation(c: Ctx, r: RNG, g: Geo) {
   c.rotate(st.ang)
   c.scale(st.s, st.s)
   // Building.
-  crayon(c, r, wobble(rect(-96, -84, 150, 66), r, 1.5, 14), [hex("#ecdcc6"), hex("#d9c2c4")], { ang: 1.5, sp: 5, len: [12, 30], w: [3, 6], base: 0.9 })
+  crayon(c, r, wobble(rect(-96, -84, 150, 66), r, 1.5, 14), [hex("#f2e2c8"), hex("#e3c7a8")], { ang: 1.5, sp: 5, len: [12, 30], w: [3, 6], base: 0.9 })
   for (let i = 0; i < 3; i++) {
     c.fillStyle = css(jit(hex("#ffd67a"), r, 8))
     c.beginPath()
@@ -578,18 +578,18 @@ function drawStation(c: Ctx, r: RNG, g: Geo) {
       1.4,
       14,
     ),
-    [hex("#b4607e"), hex("#8d4a78")],
+    [hex("#c05b3c"), hex("#9a4433")],
     { ang: 0.1, sp: 5, len: [14, 36], w: [3, 6], base: 0.9 },
   )
   // Sign board.
   crayon(c, r, wobble(rect(-64, -124, 76, 20), r, 1, 10), [hex("#fff3dc")], { sp: 5, len: [10, 24], w: [3, 5], base: 0.95 })
-  pencil(c, r, [[-52, -114], [0, -114]], hex("#6b4fa0"), 2.2, { a: 0.8 })
+  pencil(c, r, [[-52, -114], [0, -114]], hex("#c05b3c"), 2.2, { a: 0.8 })
   pencil(c, r, [[-50, -104], [-50, -124]], INK, 1.2, { a: 0.5 })
   pencil(c, r, [[-2, -104], [-2, -124]], INK, 1.2, { a: 0.5 })
   // Canopy posts.
   for (const x of [70, 142]) pencil(c, r, [[x, -74], [x, -20]], INK, 1.8, { a: 0.7 })
   // Platform slab.
-  crayon(c, r, wobble(rect(-150, -24, 320, 17), r, 1.2, 16), [hex("#d8c4de"), hex("#bfa7cf")], { ang: 0.02, sp: 5, len: [16, 46], w: [3, 6], base: 0.9 })
+  crayon(c, r, wobble(rect(-150, -24, 320, 17), r, 1.2, 16), [hex("#e7cdb4"), hex("#cfae95")], { ang: 0.02, sp: 5, len: [16, 46], w: [3, 6], base: 0.9 })
   pencil(c, r, [[-150, -8], [170, -8]], INK, 1.3, { a: 0.55 })
   pencil(c, r, [[-146, -19], [166, -19]], hex("#fff3dc"), 1.4, { a: 0.6 })
   // Bench.
@@ -603,11 +603,11 @@ function drawStation(c: Ctx, r: RNG, g: Geo) {
 }
 
 /** Paints one boil frame layer by layer, yielding between layers so the page stays responsive. */
-export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElement> {
+export function* bakeFrame(g: Geo, seed: number, k = 1): Generator<void, Canvas> {
   const L = g.L
   const { W, H } = L
   const r = mulberry32(seed)
-  const P = new Painter(W, H, r)
+  const P = new Painter(W, H, r, k)
   const big = L.portrait ? 1.1 : 1
 
   P.c.fillStyle = "#f3ead8"
@@ -669,9 +669,9 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
   // Clouds, lit from the sun side.
   P.layer(
     (c) => {
-      const shade = ["#56409a", "#6a4fad", "#8263bf"].map(hex)
-      const midc = ["#9f78cb", "#b98bd4"].map(hex)
-      const lit = ["#f59cc0", "#ffb49c", "#ffd4aa"].map(hex)
+      const shade = ["#4b5f86", "#5e7096", "#7a7f9e"].map(hex)
+      const midc = ["#c98a86", "#dd9a84"].map(hex)
+      const lit = ["#ff9d6c", "#ffb878", "#ffd99a"].map(hex)
       const puff = (p: { x: number; y: number; r: number }, k: number) => {
         const dx = L.sun[0] - p.x
         const dy = L.sun[1] - p.y
@@ -696,8 +696,8 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
   P.layer(
     (c) => {
       const [sx, sy] = L.sun
-      scumble(c, r, sx, sy, 250 * big, 150 * big, [hex("#ffcf9a"), hex("#ffb88e"), hex("#ffe2b0")], 170, { w: [14, 34], a: [0.06, 0.16], rad: [14, 44] })
-      crayon(c, r, wobble(circle(sx, sy, 64 * big, 22), r, 1.6, 12), [hex("#fff0b8"), hex("#ffdf8e"), hex("#ffcf7a")], {
+      scumble(c, r, sx, sy, 250 * big, 150 * big, [hex("#ffc278"), hex("#ffa860"), hex("#ffe09a")], 170, { w: [14, 34], a: [0.06, 0.16], rad: [14, 44] })
+      crayon(c, r, wobble(circle(sx, sy, 64 * big, 22), r, 1.6, 12), [hex("#fff0b0"), hex("#ffd979"), hex("#ffbf5e")], {
         ang: 0.5,
         sp: 5,
         len: [18, 50],
@@ -725,7 +725,7 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
       [nx(0.43), hor - 0.012 * H],
       [nx(0.45), hor + 20],
     ]
-    crayon(c, r, wobble(far, r, 3, 26), [hex("#8169b8"), hex("#9278c4"), hex("#735aa9")], { ang: 0.5, sp: 8, len: [24, 70], w: [5, 11], base: 0.75 })
+    crayon(c, r, wobble(far, r, 3, 26), [hex("#8d8ea6"), hex("#a38f99"), hex("#7c8298")], { ang: 0.5, sp: 8, len: [24, 70], w: [5, 11], base: 0.75 })
     const near: Pt[] = [
       [nx(-0.05), hor + 20],
       [nx(-0.05), hor - 0.05 * H],
@@ -735,18 +735,18 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
       [nx(0.33), hor - 0.02 * H],
       [nx(0.38), hor + 20],
     ]
-    crayon(c, r, wobble(near, r, 3, 26), [hex("#5a478f"), hex("#4c3c82")], { ang: 0.4, sp: 8, len: [24, 70], w: [5, 11], base: 0.8 })
+    crayon(c, r, wobble(near, r, 3, 26), [hex("#5a6380"), hex("#4b5370")], { ang: 0.4, sp: 8, len: [24, 70], w: [5, 11], base: 0.8 })
   })
   yield
 
   // Sea.
-  P.c.fillStyle = css(hex("#4a3f8c"), 0.9)
+  P.c.fillStyle = css(hex("#2f4f6e"), 0.9)
   P.c.fillRect(0, hor - 1, W, H - hor + 1)
   P.layer(
     (c) => {
-      const deep = hex("#2b2a70")
-      const top = hex("#7d5aa6")
-      const glow = hex("#f6a6a4")
+      const deep = hex("#1d3654")
+      const top = hex("#5a7d98")
+      const glow = hex("#ffb56e")
       crayon(c, r, wobble(rect(-20, hor - 2, W + 40, H - hor + 20), r, 0, 80), [], {
         ang: 0,
         angJit: 0.04,
@@ -780,7 +780,7 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
       [nx(1.05), hor + 0.2 * H],
       [nx(0.63), hor + 0.2 * H],
     ]
-    crayon(c, r, wobble(head, r, 3, 26), [hex("#4d3d86"), hex("#5b4896"), hex("#41347a")], { ang: 0.35, sp: 8, len: [24, 70], w: [5, 11], base: 0.82 })
+    crayon(c, r, wobble(head, r, 3, 26), [hex("#4a4f6a"), hex("#5a5a72"), hex("#3e4560")], { ang: 0.35, sp: 8, len: [24, 70], w: [5, 11], base: 0.82 })
   })
   yield
 
@@ -795,7 +795,7 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
       shore.push([x, g.yAt(x) - (58 + 22 * Math.sin(x / 90)) * sAt(u) * k ** 0.6])
     }
     shore.push([x1, g.yAt(x1) + 30], [-60, g.yAt(-60) + 30])
-    crayon(c, r, wobble(shore, r, 2.5, 26), [hex("#4f3f88"), hex("#3f5f6e"), hex("#46407f")], { ang: 0.2, sp: 7, len: [20, 60], w: [4, 10], base: 0.85 })
+    crayon(c, r, wobble(shore, r, 2.5, 26), [hex("#55505e"), hex("#3f5f6a"), hex("#4d4a5c")], { ang: 0.2, sp: 7, len: [20, 60], w: [4, 10], base: 0.85 })
   })
   yield
 
@@ -818,7 +818,7 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
   const land: Pt[] = g.lut.filter((_, i) => i % 6 === 0).map((p) => [p.x, p.y + 3] as Pt)
   land.push([W + 200, H + 60], [-200, H + 60])
   P.layer((c) => {
-    const a = hex("#4a3f80")
+    const a = hex("#5a4a52")
     const b = hex("#35596a")
     const d = hex("#2a4a58")
     crayon(c, r, land, [], {
@@ -846,7 +846,7 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
           const y = p.y + (14 + k * k * 3.1) * sAt(p.u) * (L.portrait ? 1.5 : 1)
           if (y < depth && p.x > -40 && p.x < W + 40) line.push([p.x, y])
         }
-        if (line.length > 3) pencil(c, r, line, pick(r, [hex("#6fae9c"), hex("#8f7fc4"), hex("#5a8f8a")]), 2.2, { a: 0.32, passes: 1, jit: 1.6 })
+        if (line.length > 3) pencil(c, r, line, pick(r, [hex("#6fae9c"), hex("#c98f6c"), hex("#5a8f8a")]), 2.2, { a: 0.32, passes: 1, jit: 1.6 })
       }
       const sx = L.sun[0]
       const y0 = g.yAt(sx) + 26
@@ -856,7 +856,7 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
         const spread = 40 + (y - y0) * 1.9
         const x = sx + gauss(r) * spread
         const half = rr(r, 14, 60)
-        c.strokeStyle = css(jit(pick(r, [hex("#f7ad8c"), hex("#dc86b6"), hex("#ffd4aa")]), r, 8), rr(r, 0.07, 0.24))
+        c.strokeStyle = css(jit(pick(r, [hex("#ffb06a"), hex("#f0905e"), hex("#ffd59a")]), r, 8), rr(r, 0.07, 0.24))
         c.lineWidth = rr(r, 3, 8)
         c.beginPath()
         c.moveTo(x - half, y + gauss(r) * 1.5)
@@ -877,13 +877,13 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
       const pts = g.lut.filter((_, i) => i % 4 === 0)
       for (const p of pts) bed.push([p.x, p.y - 5 * sAt(p.u)])
       for (let i = pts.length - 1; i >= 0; i--) bed.push([pts[i].x, pts[i].y + 15 * sAt(pts[i].u)])
-      crayon(c, r, bed, [hex("#3a2f68"), hex("#4b3c7c"), hex("#2e2558")], { ang: 0.05, sp: 5, len: [14, 44], w: [3, 7], base: 0.85 })
+      crayon(c, r, bed, [hex("#3d3238"), hex("#4e3e40"), hex("#30282e")], { ang: 0.05, sp: 5, len: [14, 44], w: [3, 7], base: 0.85 })
       for (let d = 0; d < g.total; d += 15) {
         const p = g.at(d)
         const s = sAt(p.u)
         const nx2 = -Math.sin(p.ang)
         const ny2 = Math.cos(p.ang)
-        c.strokeStyle = css(hex("#1d1642"), rr(r, 0.5, 0.85))
+        c.strokeStyle = css(hex("#221a1e"), rr(r, 0.5, 0.85))
         c.lineWidth = rr(r, 2, 3.4) * s
         c.beginPath()
         c.moveTo(p.x - nx2 * 3 * s + gauss(r), p.y - ny2 * 3 * s)
@@ -891,8 +891,8 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
         c.stroke()
       }
       const railLine = (off: number) => pts.map((p) => [p.x, p.y + off * sAt(p.u)] as Pt)
-      pencil(c, r, railLine(-1.5), hex("#eadcf2"), 1.7 * big, { a: 0.85, jit: 0.6 })
-      pencil(c, r, railLine(6.5), hex("#eadcf2"), 2 * big, { a: 0.85, jit: 0.6 })
+      pencil(c, r, railLine(-1.5), hex("#f4dcc0"), 1.7 * big, { a: 0.85, jit: 0.6 })
+      pencil(c, r, railLine(6.5), hex("#f4dcc0"), 2 * big, { a: 0.85, jit: 0.6 })
 
       for (const p of g.poles) {
         const k = p.h / 104
@@ -947,7 +947,7 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
       const y = onRidge ? L.fg + Math.sin(x / 210) * 13 + rr(r, -2, 14) : rr(r, L.fg + 10, H)
       const l = rr(r, 12, 34) * big
       const th = -Math.PI / 2 + gauss(r) * 0.4
-      c.strokeStyle = css(jit(pick(r, [hex("#8fd9b6"), hex("#5fae96"), hex("#ffc6a0"), hex("#3d8272")]), r, 8), rr(r, 0.3, 0.8))
+      c.strokeStyle = css(jit(pick(r, [hex("#8fd9b6"), hex("#5fae96"), hex("#ffc07a"), hex("#3d8272")]), r, 8), rr(r, 0.3, 0.8))
       c.lineWidth = rr(r, 1.4, 3)
       c.beginPath()
       c.moveTo(x, y)
@@ -962,7 +962,7 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
     (c) => {
       const p = L.puddle
       const shape = wobble(ellipse(p.x, p.y, p.rx, p.ry, 26), r, 2.4, 18)
-      crayon(c, r, shape, [hex("#8f5bb2"), hex("#dc86b6"), hex("#f7ad8c"), hex("#6a4fad")], { ang: 0, angJit: 0.06, sp: 5, len: [30, 90], w: [3, 7], base: 0.9 })
+      crayon(c, r, shape, [hex("#3f6d8f"), hex("#f0905e"), hex("#f8b05a"), hex("#c9877a")], { ang: 0, angJit: 0.06, sp: 5, len: [30, 90], w: [3, 7], base: 0.9 })
       pencil(c, r, ellipse(p.x, p.y, p.rx, p.ry, 26), hex("#1d3a44"), 1.8, { a: 0.5, closed: true })
       pencil(c, r, [[p.x - p.rx * 0.5, p.y - p.ry * 0.25], [p.x - p.rx * 0.1, p.y - p.ry * 0.3]], hex("#fff6e0"), 2.2, { a: 0.8 })
       pencil(c, r, [[p.x + p.rx * 0.2, p.y + p.ry * 0.3], [p.x + p.rx * 0.45, p.y + p.ry * 0.25]], hex("#fff6e0"), 1.8, { a: 0.6 })
@@ -980,7 +980,7 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
         c.fill()
       }
       const sp = L.sprout
-      crayon(c, r, wobble(ellipse(sp.x, sp.y + 7 * sp.s, 36 * sp.s, 11 * sp.s, 14), r, 1.5, 12), [hex("#4a3550"), hex("#5e4260"), hex("#3a2a44")], {
+      crayon(c, r, wobble(ellipse(sp.x, sp.y + 7 * sp.s, 36 * sp.s, 11 * sp.s, 14), r, 1.5, 12), [hex("#5a3a30"), hex("#6e4636"), hex("#45302a")], {
         ang: 0.1,
         sp: 4,
         len: [10, 26],
@@ -993,17 +993,26 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
   )
   yield
 
-  // Handwritten notes.
-  P.layer(
-    (c) => {
-      c.font = `italic 600 ${L.font}px Allo, "Patrick Hand", sans-serif`
+  return P.done()
+}
+
+
+/**
+ * The handwritten notes. They are lettered on the page (not in the worker)
+ * because they need the Allo web font.
+ */
+export function drawNotes(c: Ctx, g: Geo) {
+  const L = g.L
+  const r = mulberry32(31)
+  const big = L.portrait ? 1.1 : 1
+      c.font = `600 ${L.font}px Allo, "Patrick Hand", sans-serif`
       c.textAlign = "center"
       c.textBaseline = "middle"
       for (const a of g.annots) {
         c.save()
         c.translate(a.x + gauss(r) * 0.8, a.y + gauss(r) * 0.8)
         c.rotate(a.rot + gauss(r) * 0.006)
-        c.fillStyle = "rgba(26,18,60,0.35)"
+        c.fillStyle = "rgba(40,22,18,0.4)"
         c.fillText(a.text, 2, 2.5)
         c.fillStyle = "#fff3dc"
         c.fillText(a.text, 0, 0)
@@ -1024,13 +1033,6 @@ export function* bakeFrame(g: Geo, seed: number): Generator<void, HTMLCanvasElem
         for (const d of [-0.5, 0.5])
           pencil(c, r, [[tip[0] - Math.cos(th + d) * hl, tip[1] - Math.sin(th + d) * hl], tip], cream, 2.6 * big, { a: 0.95, jit: 0.5 })
       }
-    },
-    "fine",
-    0.3,
-  )
-  yield
-
-  return P.cv
 }
 
 function circle(x: number, y: number, rad: number, n: number): Pt[] {
@@ -1043,20 +1045,19 @@ function ellipse(x: number, y: number, rx: number, ry: number, n: number): Pt[] 
 }
 
 /** Paper margin with a ragged edge plus speckle, drawn over everything each frame. */
-export function bakeTop(L: Layout, grain: HTMLCanvasElement): HTMLCanvasElement {
+export function bakeTop(L: Layout, k = 1): Canvas {
   const { W, H } = L
   const r = mulberry32(5)
-  const cv = document.createElement("canvas")
-  cv.width = W
-  cv.height = H
-  const c = cv.getContext("2d")!
-  c.fillStyle = c.createPattern(grain, "repeat")!
-  c.fillRect(0, 0, W, H)
+  const pw = Math.round(W * k)
+  const ph = Math.round(H * k)
+  const cv = makeCanvas(pw, ph)
+  const c = ctx2d(cv)
+  c.fillStyle = c.createPattern(getTiles().grain, "repeat")!
+  c.fillRect(0, 0, pw, ph)
 
-  const paper = document.createElement("canvas")
-  paper.width = W
-  paper.height = H
-  const p = paper.getContext("2d")!
+  const paper = makeCanvas(pw, ph)
+  const p = ctx2d(paper)
+  p.setTransform(k, 0, 0, k, 0, 0)
   p.fillStyle = "#f3ead8"
   p.fillRect(0, 0, W, H)
   p.globalCompositeOperation = "destination-out"
@@ -1093,5 +1094,6 @@ export function bakeTop(L: Layout, grain: HTMLCanvasElement): HTMLCanvasElement 
     p.stroke()
   }
   c.drawImage(paper, 0, 0)
+  paper.width = paper.height = 1
   return cv
 }
