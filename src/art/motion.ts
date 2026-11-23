@@ -1,4 +1,4 @@
-import { type Pt, sparkle, trace, wobble } from "./brushes"
+import { type Canvas, type Pt, ctx2d, makeCanvas, sparkle, trace, wobble } from "./brushes"
 import { clamp, gauss, lerp, mulberry32, rr, smooth } from "./rng"
 import type { Geo } from "./scene"
 
@@ -17,13 +17,26 @@ const GAP = 10
 const easeOut = (t: number) => 1 - (1 - t) ** 3
 const easeIn = (t: number) => t ** 2.4
 
+const sprites = new Map<string, Canvas>()
+
+/** Soft round light. Each colour is painted once into a small sprite, then reused. */
 function glow(c: Ctx, x: number, y: number, rad: number, col: string, a: number) {
   if (a <= 0 || rad <= 0) return
-  const g = c.createRadialGradient(x, y, 0, x, y, rad)
-  g.addColorStop(0, col.replace("ALPHA", String(a)))
-  g.addColorStop(1, col.replace("ALPHA", "0"))
-  c.fillStyle = g
-  c.fillRect(x - rad, y - rad, rad * 2, rad * 2)
+  let sprite = sprites.get(col)
+  if (!sprite) {
+    sprite = makeCanvas(128, 128)
+    const s = ctx2d(sprite)
+    const g = s.createRadialGradient(64, 64, 0, 64, 64, 64)
+    g.addColorStop(0, col.replace("ALPHA", "1"))
+    g.addColorStop(1, col.replace("ALPHA", "0"))
+    s.fillStyle = g
+    s.fillRect(0, 0, 128, 128)
+    sprites.set(col, sprite)
+  }
+  const prev = c.globalAlpha
+  c.globalAlpha = prev * Math.min(1, a)
+  c.drawImage(sprite, x - rad, y - rad, rad * 2, rad * 2)
+  c.globalAlpha = prev
 }
 
 const rect = (x: number, y: number, w: number, h: number): Pt[] => [
@@ -41,7 +54,7 @@ function drawCar(c: Ctx, r: () => number, x: number, y: number, ang: number, s: 
   const L = CAR_L
   const top = -CAR_H - 7
   // Wheels.
-  c.fillStyle = "#1d1642"
+  c.fillStyle = "#221a1e"
   for (const wx of [-L * 0.32, -L * 0.2, L * 0.2, L * 0.32]) {
     c.beginPath()
     c.arc(wx, -4, 6.2, 0, 6.3)
@@ -61,7 +74,7 @@ function drawCar(c: Ctx, r: () => number, x: number, y: number, ang: number, s: 
   trace(c, wobble(body, r, 1.1, 22))
   c.fill()
   // Roof and stripe.
-  c.fillStyle = "#4b3c7c"
+  c.fillStyle = "#3f4c68"
   c.beginPath()
   trace(c, wobble(rect(-L / 2 + 3, top, L - 8 - nose, 9), r, 0.9, 20))
   c.fill()
@@ -69,7 +82,7 @@ function drawCar(c: Ctx, r: () => number, x: number, y: number, ang: number, s: 
   c.beginPath()
   trace(c, wobble(rect(-L / 2, -22, L, 6.5), r, 0.8, 22))
   c.fill()
-  c.fillStyle = "#e58bb8"
+  c.fillStyle = "#f0905e"
   c.beginPath()
   trace(c, wobble(rect(-L / 2, -14, L, 3.2), r, 0.6, 22))
   c.fill()
@@ -78,7 +91,7 @@ function drawCar(c: Ctx, r: () => number, x: number, y: number, ang: number, s: 
   for (let i = 0; i < 16; i++) {
     const hx = rr(r, -L / 2 + 6, L / 2 - 20)
     const hy = rr(r, top + 12, -12)
-    c.strokeStyle = `rgba(190,160,190,${rr(r, 0.12, 0.3)})`
+    c.strokeStyle = `rgba(200,170,150,${rr(r, 0.12, 0.3)})`
     c.lineWidth = rr(r, 1.5, 3.5)
     c.beginPath()
     c.moveTo(hx, hy)
@@ -96,7 +109,7 @@ function drawCar(c: Ctx, r: () => number, x: number, y: number, ang: number, s: 
     c.fill()
   }
   // Doors.
-  c.strokeStyle = "rgba(36,26,77,0.5)"
+  c.strokeStyle = "rgba(42,36,48,0.5)"
   c.lineWidth = 1.3
   for (const dx of [-L / 2 + 9, L / 2 - 14 - nose]) {
     c.beginPath()
@@ -105,7 +118,7 @@ function drawCar(c: Ctx, r: () => number, x: number, y: number, ang: number, s: 
     c.stroke()
   }
   // Outline, twice, never quite the same.
-  c.strokeStyle = "rgba(36,26,77,0.78)"
+  c.strokeStyle = "rgba(42,36,48,0.78)"
   for (let p = 0; p < 2; p++) {
     c.lineWidth = rr(r, 1.2, 2)
     c.beginPath()
@@ -205,7 +218,7 @@ export function drawMotion(c: Ctx, g: Geo, time: number, boil: number) {
     const a = 0.5 + 0.5 * Math.sin(time * 1.6)
     c.save()
     c.globalCompositeOperation = "lighter"
-    glow(c, sx, sy, (70 + a * 26) * big, "rgba(214,222,255,ALPHA)", 0.22 + a * 0.16)
+    glow(c, sx, sy, (70 + a * 26) * big, "rgba(230,236,255,ALPHA)", 0.22 + a * 0.16)
     c.restore()
     const s = (27 + a * 5) * big
     sparkle(c, sx + gauss(r) * 0.5, sy + gauss(r) * 0.5, s, "#eef1fa", 1, Math.sin(time * 0.5) * 0.12)
